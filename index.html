@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader Bot</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #141414; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: #1f1f1f; width: 100%; max-width: 480px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); text-align: center; border: 1px solid #333; }
+        h2 { color: #ff0000; margin-top: 0; font-size: 24px; }
+        input { width: 100%; padding: 14px; background: #2b2b2b; border: 1px solid #444; border-radius: 8px; color: white; font-size: 15px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: #ff0000; outline: none; }
+        button { width: 100%; padding: 14px; margin-top: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-check { background: #ff0000; color: white; }
+        .btn-check:hover { background: #cc0000; }
+        .btn-download { background: #28a745; color: white; }
+        .btn-download:hover { background: #218838; }
+        button:disabled { background: #555 !important; color: #aaa; cursor: not-allowed; }
+        .toggle-section { display: none; margin-top: 20px; text-align: left; animation: fadeIn 0.5s ease; }
+        .thumb { width: 100%; border-radius: 10px; margin-bottom: 12px; border: 1px solid #444; }
+        .title { font-size: 14px; font-weight: 600; margin-bottom: 15px; color: #ddd; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        select { width: 100%; padding: 12px; background: #2b2b2b; color: white; border: 1px solid #444; border-radius: 8px; font-size: 15px; }
+        #status { margin-top: 15px; font-size: 13px; color: #aaa; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>YouTube Downloader</h2>
+    <p style="color: #aaa; font-size: 14px; margin-bottom: 20px;">Unduh video favorit Anda dari 144p hingga 1080p Full HD</p>
+    
+    <input type="text" id="urlInput" placeholder="Tempel/Paste link video YouTube di sini...">
+    <button id="checkBtn" class="btn-check" onclick="prosesCek()">Analisis Video</button>
+    
+    <div id="downloadToggle" class="toggle-section">
+        <img id="videoThumb" class="thumb" src="" alt="Thumbnail">
+        <div id="videoTitle" class="title">Judul Video</div>
+        
+        <label style="font-size: 13px; color: #aaa; display:block; margin-bottom: 5px;">Pilih Kualitas Video:</label>
+        <select id="qualitySelect"></select>
+        
+        <button id="dlBtn" class="btn-download" onclick="mulaiUnduh()">Unduh Sekarang</button>
+    </div>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+    let savedUrl = '';
+
+    async function prosesCek() {
+        const url = document.getElementById('urlInput').value.trim();
+        const status = document.getElementById('status');
+        const checkBtn = document.getElementById('checkBtn');
+        const toggleSection = document.getElementById('downloadToggle');
+        
+        if (!url) return alert('Silakan tempel link YouTube terlebih dahulu!');
+        
+        status.innerText = "Sedang membaca data YouTube...";
+        checkBtn.disabled = true;
+        toggleSection.style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/video-info?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+
+            if (data.error) {
+                status.innerText = data.error;
+                checkBtn.disabled = false;
+                return;
+            }
+
+            savedUrl = url;
+            document.getElementById('videoThumb').src = data.thumbnail;
+            document.getElementById('videoTitle').innerText = data.title;
+
+            const select = document.getElementById('qualitySelect');
+            select.innerHTML = '';
+            
+            data.formats.forEach(f => {
+                if (f.qualityLabel) {
+                    const option = document.createElement('option');
+                    option.value = f.itag;
+                    // Beri penanda jika resolusi membutuhkan proses penggabungan (1080p)
+                    option.innerText = f.qualityLabel + (f.hasAudio ? '' : ' (Proses HD / No-Audio Origin)');
+                    select.appendChild(option);
+                }
+            });
+
+            toggleSection.style.display = 'block'; // Aktifkan/Toggle tampilkan opsi download
+            status.innerText = "Video berhasil dimuat! Pilih resolusi di bawah.";
+        } catch (err) {
+            status.innerText = "Gagal terhubung ke server.";
+        } finally {
+            checkBtn.disabled = false;
+        }
+    }
+
+    function mulaiUnduh() {
+        const itag = document.getElementById('qualitySelect').value;
+        if (!savedUrl || !itag) return;
+        
+        document.getElementById('status').innerText = "Proses unduhan dimulai. Jangan tutup halaman ini sampai file terdownload otomatis...";
+        
+        // Mengarahkan browser untuk langsung mendownload file dari API backend
+        window.location.href = `/api/download?url=${encodeURIComponent(savedUrl)}&itag=${itag}`;
+    }
+</script>
+
+</body>
+</html>
