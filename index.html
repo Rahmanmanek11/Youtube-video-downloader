@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader - Vercel Master Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: #1e1e1e; width: 100%; max-width: 480px; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; border: 1px solid #2d2d2d; }
+        h2 { color: #ff0000; margin-top: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+        p { color: #aaaaaa; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        input, select, button { width: 100%; padding: 14px; margin-top: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
+        input { background: #2b2b2b; color: white; transition: 0.3s; }
+        input:focus { border-color: #ff0000; outline: none; box-shadow: 0 0 8px rgba(255, 0, 0, 0.2); }
+        select { background: #2b2b2b; color: white; cursor: pointer; }
+        button { background: #ff0000; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3); }
+        button:hover { background: #cc0000; transform: translateY(-1px); }
+        .action-box { margin-top: 20px; padding: 15px; background: #252525; border-radius: 10px; border: 1px solid #333; display: none; animation: fadeIn 0.4s ease; }
+        .btn-download-now { background: #28a745; color: white; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); margin-top: 5px; }
+        .btn-download-now:hover { background: #218838; }
+        .btn-backup { background: #333; color: #00ffcc; border: 1px solid #444; font-size: 13px; padding: 10px; margin-top: 10px; }
+        .btn-backup:hover { background: #444; color: #ffffff; }
+        .footer { margin-top: 30px; font-size: 11px; color: #555; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>YouTube Downloader</h2>
+    <p>Bypass Blokir Sistem Cloud - Pemrosesan IP Lokal Browser Mendukung Resolusi 144p hingga 1080p Full HD</p>
+    
+    <input type="text" id="urlInput" placeholder="Tempel / Paste link video YouTube di sini...">
+    
+    <label style="display: block; text-align: left; margin-top: 15px; font-size: 13px; color: #aaa;">Pilih Kualitas Video (Toggle):</label>
+    <select id="qualitySelect">
+        <option value="1080">1080p (Full HD - Tajam)</option>
+        <option value="720">720p (HD - Jernih)</option>
+        <option value="480">480p (Medium)</option>
+        <option value="360" selected>360p (Normal Standard)</option>
+        <option value="144">144p (Sangat Rendah)</option>
+        <option value="mp3">Audio MP3 Only (Musik)</option>
+    </select>
+    
+    <button id="processBtn" onclick="generateDownloadGateway()">Proses Tautan Unduhan</button>
+    
+    <div id="actionBox" class="action-box">
+        <p style="color: #28a745; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">✓ Jalur Unduhan Siap!</p>
+        <button class="btn-download-now" onclick="bukaJalurUtama()">📥 KLIK UNTUK DOWNLOAD</button>
+        
+        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+        <p style="color: #aaa; font-size: 12px; margin: 0 0 5px 0;">Jalur Utama lambat? Gunakan Server Cadangan ini:</p>
+        <button class="btn-backup" onclick="bukaJalurBackup()">⚡ Gunakan Jalur Alternatif B</button>
+    </div>
+
+    <div class="footer">Hosted on Vercel Master Pro • Bebas Iklan & Gratis Selamanya</div>
+</div>
+
+<script>
+    let globalUrl = "";
+    let globalQuality = "";
+
+    function extractVideoId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function generateDownloadGateway() {
+        const url = document.getElementById('urlInput').value.trim();
+        const quality = document.getElementById('qualitySelect').value;
+        const actionBox = document.getElementById('actionBox');
+
+        if (!url) {
+            alert('Silakan masukkan atau tempel link YouTube terlebih dahulu!');
+            return;
+        }
+
+        globalUrl = url;
+        globalQuality = quality;
+
+        // Tampilkan kotak tombol unduhan secara instan tanpa loading berputar
+        actionBox.style.display = "block";
+    }
+
+    function bukaJalurUtama() {
+        // Membuka gerbang konversi di tab baru agar tidak terkena blokir aturan Iframe browser HP
+        const targetUrl = `https://loader.to/api/button/?url=${encodeURIComponent(globalUrl)}&f=${globalQuality}&color=ff0000`;
+        window.open(targetUrl, '_blank');
+    }
+
+    function bukaJalurBackup() {
+        const videoId = extractVideoId(globalUrl);
+        if (videoId) {
+            // Trik jalan pintas legendaris dunia: mengubah youtube.com menjadi youtubepp.com
+            // Ini akan langsung membuka video tersebut di server Y2Mate yang super cepat dan stabil
+            window.open(`https://www.youtubepp.com/watch?v=${videoId}`, '_blank');
+        } else {
+            // Jika menggunakan link shortener aneh, lempar ke SaveFrom Net global gateway
+            window.open(`https://id.savefrom.net/savefrom.php?url=${encodeURIComponent(globalUrl)}`, '_blank');
+        }
+    }
+</script>
+
+</body>
+</html>
