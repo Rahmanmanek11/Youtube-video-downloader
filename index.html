@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader - Vercel Multi-Server Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: #1e1e1e; width: 100%; max-width: 480px; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; border: 1px solid #2d2d2d; }
+        h2 { color: #ff0000; margin-top: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+        p { color: #aaaaaa; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        input, select, button { width: 100%; padding: 14px; margin-top: 12px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; font-size: 15px; }
+        input { background: #2b2b2b; color: white; transition: 0.3s; }
+        input:focus { border-color: #ff0000; outline: none; box-shadow: 0 0 8px rgba(255, 0, 0, 0.2); }
+        select { background: #2b2b2b; color: white; cursor: pointer; }
+        button { background: #ff0000; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; margin-top: 20px; box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3); }
+        button:hover { background: #cc0000; transform: translateY(-1px); }
+        button:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+        #status { margin-top: 20px; font-size: 14px; color: #00ffcc; min-height: 20px; line-height: 1.4; }
+        .footer { margin-top: 30px; font-size: 11px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>YouTube Downloader</h2>
+    <p>Bebas Blokir IP & Mendukung Resolusi 144p hingga 1080p Full HD</p>
+    
+    <input type="text" id="urlInput" placeholder="Tempel / Paste link video YouTube di sini...">
+    
+    <label style="display: block; text-align: left; margin-top: 15px; font-size: 13px; color: #aaa;">Pilih Kualitas Video (Toggle):</label>
+    <select id="qualitySelect">
+        <option value="1080">1080p (Full HD)</option>
+        <option value="720">720p (HD)</option>
+        <option value="480">480p (Medium)</option>
+        <option value="360" selected>360p (Normal Standard)</option>
+        <option value="240">240p (Rendah)</option>
+        <option value="144">144p (Sangat Rendah)</option>
+    </select>
+    
+    <button id="downloadBtn" onclick="prosesUnduh()">Unduh Sekarang</button>
+    
+    <div id="status"></div>
+    <div class="footer">Hosted on Vercel v2 • Anti Block Multi-Server Engine</div>
+</div>
+
+<script>
+    // Daftar kluster server cadangan publik yang aktif & mengizinkan akses web luar (CORS)
+    const COBALT_SERVERS = [
+        "https://api.cobalt.tools",
+        "https://cobalt-api.hyper.lol",
+        "https://co.wuk.sh"
+    ];
+
+    async function prosesUnduh() {
+        const url = document.getElementById('urlInput').value.trim();
+        const quality = document.getElementById('qualitySelect').value;
+        const status = document.getElementById('status');
+        const btn = document.getElementById('downloadBtn');
+
+        if (!url) {
+            alert('Silakan masukkan atau tempel link YouTube terlebih dahulu!');
+            return;
+        }
+
+        status.style.color = '#00ffcc';
+        status.innerText = 'Menghubungkan ke jalur pengunduhan...';
+        btn.disabled = true;
+
+        let success = false;
+
+        // Melakukan perulangan otomatis mencari server yang tidak sibuk
+        for (let i = 0; i < COBALT_SERVERS.length; i++) {
+            const serverUrl = COBALT_SERVERS[i];
+            status.innerText = `Sedang memproses video melalui jalur server alternatif ${i + 1}...`;
+            
+            try {
+                const response = await fetch(`${serverUrl}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        videoQuality: quality, // Struktur API baru v10
+                        vQuality: quality,     // Cadangan struktur API lama v7
+                        filenamePattern: 'basic'
+                    })
+                });
+
+                const data = await response.json();
+
+                if ((data.status === 'stream' || data.url) && data.url) {
+                    status.style.color = '#28a745';
+                    status.innerText = 'Sukses! File video sedang dialirkan ke penyimpanan HP Anda...';
+                    
+                    // Trigger download otomatis langsung tanpa iklan
+                    const linkBypass = document.createElement('a');
+                    linkBypass.href = data.url;
+                    linkBypass.download = '';
+                    document.body.appendChild(linkBypass);
+                    linkBypass.click();
+                    document.body.removeChild(linkBypass);
+                    
+                    success = true;
+                    break; // Berhenti mencari karena sudah berhasil terunduh
+                }
+            } catch (error) {
+                console.warn(`Server ${i + 1} sibuk, mencoba jalur berikutnya...`);
+            }
+        }
+
+        if (!success) {
+            status.style.color = '#ff3333';
+            status.innerText = 'Server publik sedang sangat sibuk. Tunggu beberapa detik, lalu coba ketuk tombol Unduh kembali.';
+        }
+        
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
